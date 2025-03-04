@@ -30,16 +30,18 @@ def make_hours_tomorrow():
 
 
 def get_weather_data():
-    url = "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=59.91&lon=10.75"
+    lat, lon, search = get_lat_lon_from_city_data()
+    url = f"https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={lat}&lon={lon}"
+    #url = "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=59.91&lon=10.75"
     response = requests.get(url)
-
+    print(response.status_code)
     if response.status_code == 200:
         data = response.json()
     
-    return data
+    return data, search
 
 def get_weather_data_for_tomorrow_per_hour():
-    data = get_weather_data()
+    data, search = get_weather_data()
     properties = data["properties"]
     timeseries = properties["timeseries"]
     hourstrings_iso, hourstrings = make_hours_tomorrow()
@@ -49,10 +51,10 @@ def get_weather_data_for_tomorrow_per_hour():
         hour = timeseries[hours]
         if hour["time"] in hourstrings_iso:
             weather_data_per_hour.append(timeseries[hours])
-    return weather_data_per_hour
+    return weather_data_per_hour, search
 
 def get_temperatures_for_tomorrow():
-    hours_iso = get_weather_data_for_tomorrow_per_hour()
+    hours_iso, search = get_weather_data_for_tomorrow_per_hour()
     temperatures = []
     for hours in hours_iso:
         data = hours["data"]
@@ -61,31 +63,50 @@ def get_temperatures_for_tomorrow():
         temperature = details["air_temperature"]
         temperatures.append(temperature)
         
-    return temperatures
+    return temperatures, search
     
 def output_temperatures():
     tomorrow = get_date_tomorrow()
-    temperatures = get_temperatures_for_tomorrow()
+    temperatures, search = get_temperatures_for_tomorrow()
     hourstrings_iso, hourstrings = make_hours_tomorrow()
 
-    print(f'Temperaturer for Oslo {tomorrow.day}.{tomorrow.month}.{tomorrow.year}:')
+    print(f'Temperaturer for {search} {tomorrow.day}.{tomorrow.month}.{tomorrow.year}:')
     print('\n')
     for hour, temperature in zip(hourstrings, temperatures):
         outputstring = f'{hour} {temperature} grader'
         print(outputstring)
     
 def search_by_city():
-    ### Start of citysearch-function ###
-    #search = str(input("Tast inn bynavn: "))
-    search = "oslo"
-    nominatim_url = "https://nominatim.openstreetmap.org/search?q=oslo+norge"
-    response = requests.get(nominatim_url)
-    print(response.status_code)
-
+    search = str(input("Tast inn bynavn: "))
+    user_agent = {'User-agent': 'Mozilla/5.0'}
+    nominatim_url = f"https://nominatim.openstreetmap.org/search?q={search}&format=json"
+    response = requests.get(nominatim_url, headers=user_agent)
+    print(len(response.json()))
     if response.status_code == 200:
-        data = response
-        print(data)
+
+        if len(response.json()) > 0:
+            data = response.json()[0]
+        else:
+            print(f"Feil: Kan ikke finne en by med navnet {search}. Vennligst kjør programmet på nytt.")
+            exit()
+    
+    return data, search
+
+def get_lat_lon_from_city_data():
+    data, search = search_by_city()
+
+    latitude = float(data["lat"])
+    longitude = float(data["lon"])
+
+    shorten_lat = round(latitude, 1)
+    shorten_lon = round(longitude, 1)
+
+    print(shorten_lat, shorten_lon)
+
+    return shorten_lat, shorten_lon, search
 
 if __name__ == '__main__':
     output_temperatures()
     #search_by_city()
+    #lat, lon = get_lat_lon_from_city_data()
+    #print(lat, lon)
