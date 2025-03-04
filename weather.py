@@ -98,8 +98,8 @@ def get_lat_lon_from_city_data():
     latitude = float(data["lat"])
     longitude = float(data["lon"])
 
-    shorten_lat = round(latitude, 1)
-    shorten_lon = round(longitude, 1)
+    shorten_lat = round(latitude, 2)
+    shorten_lon = round(longitude, 2)
 
     print(shorten_lat, shorten_lon)
 
