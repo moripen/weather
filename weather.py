@@ -38,31 +38,34 @@ def get_weather_data():
     
     return data
 
-def get_temperatures_per_hour():
-        data = get_weather_data()
-        properties = data["properties"]
-        timeseries = properties["timeseries"]
-        hourstrings_iso, hourstrings = make_hours_tomorrow()
+def get_weather_data_for_tomorrow_per_hour():
+    data = get_weather_data()
+    properties = data["properties"]
+    timeseries = properties["timeseries"]
+    hourstrings_iso, hourstrings = make_hours_tomorrow()
 
-        hours_iso = []
-        for hours in range(0,48):
-            hour = timeseries[hours]
-            if hour["time"] in hourstrings_iso:
-                hours_iso.append(timeseries[hours])
+    weather_data_per_hour = []
+    for hours in range(0,48):
+        hour = timeseries[hours]
+        if hour["time"] in hourstrings_iso:
+            weather_data_per_hour.append(timeseries[hours])
+    return weather_data_per_hour
 
-        temperatures = []
-        for hours in hours_iso:
-            data = hours["data"]
-            instant = data["instant"]
-            details = instant["details"]
-            temperature = details["air_temperature"]
-            temperatures.append(temperature)
-          
-        return temperatures
+def get_temperatures_for_tomorrow():
+    hours_iso = get_weather_data_for_tomorrow_per_hour()
+    temperatures = []
+    for hours in hours_iso:
+        data = hours["data"]
+        instant = data["instant"]
+        details = instant["details"]
+        temperature = details["air_temperature"]
+        temperatures.append(temperature)
+        
+    return temperatures
     
 def output_temperatures():
     tomorrow = get_date_tomorrow()
-    temperatures = get_temperatures_per_hour()
+    temperatures = get_temperatures_for_tomorrow()
     hourstrings_iso, hourstrings = make_hours_tomorrow()
 
     print(f'Temperaturer for Oslo {tomorrow.day}.{tomorrow.month}.{tomorrow.year}:')
