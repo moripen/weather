@@ -62,6 +62,18 @@ def output_temperatures():
         outputstring = f'{hour} {temperature} grader'
         print(outputstring)
     
+def search_by_city():
+    ### Start of citysearch-function ###
+    #search = str(input("Tast inn bynavn: "))
+    search = "oslo"
+    nominatim_url = "https://nominatim.openstreetmap.org/search?q=oslo+norge"
+    response = requests.get(nominatim_url)
+    print(response.status_code)
+
+    if response.status_code == 200:
+        data = response
+        print(data)
 
 if __name__ == '__main__':
-    output_temperatures()
+    #output_temperatures()
+    search_by_city()
