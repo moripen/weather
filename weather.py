@@ -8,6 +8,11 @@ def get_date_tomorrow():
     return tomorrow
 
 def make_hours_tomorrow():
+    '''
+    A function that creates and returns two lists.
+    One containing the date+hourstrings needed for the ISO-format,
+    and one formatted for the printout later.
+    '''
     tomorrow = str(get_date_tomorrow())
     hourstrings_iso = []
     hourstrings = []
@@ -29,8 +34,12 @@ def get_weather_data():
     response = requests.get(url)
 
     if response.status_code == 200:
-
         data = response.json()
+    
+    return data
+
+def get_temperatures_per_hour():
+        data = get_weather_data()
         properties = data["properties"]
         timeseries = properties["timeseries"]
         hourstrings_iso, hourstrings = make_hours_tomorrow()
@@ -53,7 +62,7 @@ def get_weather_data():
     
 def output_temperatures():
     tomorrow = get_date_tomorrow()
-    temperatures = get_weather_data()
+    temperatures = get_temperatures_per_hour()
     hourstrings_iso, hourstrings = make_hours_tomorrow()
 
     print(f'Temperaturer for Oslo {tomorrow.day}.{tomorrow.month}.{tomorrow.year}:')
@@ -75,5 +84,5 @@ def search_by_city():
         print(data)
 
 if __name__ == '__main__':
-    #output_temperatures()
-    search_by_city()
+    output_temperatures()
+    #search_by_city()
