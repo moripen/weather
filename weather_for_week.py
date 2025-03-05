@@ -85,31 +85,52 @@ def get_temperatures_for_next_week(weather_data_per_hour:list) -> list:
         
     return temperatures
 
-def separate_first_two_days(temperatures: list, dates_for_week: list):
+def separate_days(temperatures: list, dates_for_week: list):
     day1 = []
     day2 = []
+    day3 = []
+    day4 = []
+    day5 = []
+    day6 = []
+    day7 = []
     for listentry in temperatures:
         if listentry[0].startswith(dates_for_week[0]):
             day1.append(listentry)
         elif listentry[0].startswith(dates_for_week[1]):
             day2.append(listentry)
-    return day1, day2
+        elif listentry[0].startswith(dates_for_week[2]):
+            day3.append(listentry)
+        elif listentry[0].startswith(dates_for_week[3]):
+            day4.append(listentry)
+        elif listentry[0].startswith(dates_for_week[4]):
+            day5.append(listentry)
+        elif listentry[0].startswith(dates_for_week[5]):
+            day6.append(listentry)
+        elif listentry[0].startswith(dates_for_week[6]):
+            day7.append(listentry)
 
-def calculate_averages_first_day(day1: list):
+    return day1, day2, day3, day4, day5, day6, day7
+
+def calculate_averages(day: list):
     sumtemp = 0.0
     sum_periods = [0.0, 0.0, 0.0, 0.0]
     n_in_period = [0, 0, 0, 0]
-    for day in day1:
+    for day in day:
         sumtemp += day[1]
-        for i in range(0, 10):
+        for i in range(0, 6):
             if f"T0{i}" in day[0]:
                 sum_periods[0] += day[1]
                 n_in_period[0] += 1
-        for i in range(10, 15):
-            if f"T{i}" in day[0]:
-                sum_periods[1] += day[1]
-                n_in_period[1] += 1
-        for i in range(15, 18):
+        for i in range(6, 12):
+            if i > 9:
+                if f"T{i}" in day[0]:
+                    sum_periods[1] += day[1]
+                    n_in_period[1] += 1
+            else:
+                if f"T0{i}" in day[0]:
+                    sum_periods[1] += day[1]
+                    n_in_period[1] += 1
+        for i in range(12, 18):
             if f"T{i}" in day[0]:
                 sum_periods[2] += day[1]
                 n_in_period[2] += 1
@@ -117,15 +138,12 @@ def calculate_averages_first_day(day1: list):
             if f"T{i}" in day[0]:
                 sum_periods[3] += day[1]
                 n_in_period[3] += 1
-    averagetemp = round(sumtemp/len(day1), 1)
-    print(sum_periods, n_in_period)
+    average_temp = round(sumtemp/len(day), 1)
     average_periods = [0,0,0,0]
     for i in range(0,4):
-        average_periods[i] += sum_periods[i]/n_in_period[i]
-
-    print
+        average_periods[i] += round(sum_periods[i]/n_in_period[i],1)
     
-    return averagetemp, average_periods
+    return average_temp, average_periods
 
 
 def output_temperatures_for_week():
@@ -136,8 +154,8 @@ def output_temperatures_for_week():
     hourstrings_iso_week = make_hourstring_for_week(dates_for_week)
     weather_data_per_hour = get_weather_data_for_next_week_per_hour(weather_data, hourstrings_iso_week)
     temperatures_for_week = get_temperatures_for_next_week(weather_data_per_hour)
-    day1, day2 = separate_first_two_days(temperatures_for_week, dates_for_week)
-    averagetemp, average_periods = calculate_averages_first_day(day1)
+    day1, day2, day3, day4, day5, day6, day7 = separate_days(temperatures_for_week, dates_for_week)
+    average_temp_day_1, average_periods_day1 = calculate_averages(day1)
 
 if __name__ == '__main__':
     output_temperatures_for_week()
