@@ -8,7 +8,7 @@ def get_date_tomorrow():
     return tomorrow
 
 def search_input():
-    user_agent = {'User-agent': 'Mozilla/5.0'}
+    user_agent = {'User-agent': 'moripen/weather'}
     search = str(input("Tast inn bynavn: "))
     nominatim_url = f"https://nominatim.openstreetmap.org/search?q={search}&format=json"
     response = requests.get(nominatim_url, headers=user_agent)
