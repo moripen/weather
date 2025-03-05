@@ -1,26 +1,31 @@
 import requests
 import json
 import datetime
+import os
 
 def get_date_tomorrow(): 
     in_a_day = datetime.datetime.today() + datetime.timedelta(days=1)
     tomorrow = in_a_day.date()
     return tomorrow
 
-def search_by_city():
-    search = str(input("Tast inn bynavn: "))
+def search_input():
     user_agent = {'User-agent': 'Mozilla/5.0'}
+    search = str(input("Tast inn bynavn: "))
     nominatim_url = f"https://nominatim.openstreetmap.org/search?q={search}&format=json"
     response = requests.get(nominatim_url, headers=user_agent)
-    print(response.json()[0])
-    if response.status_code == 200:
 
-        if len(response.json()) > 0:
-            city_data = response.json()[0]
-        else:
-            print(f"Feil: Kan ikke finne en by med navnet {search}. Vennligst kjør programmet på nytt.")
-            exit()
-    
+    return response, search
+
+def search_by_city():
+    response, search = search_input()
+    city_data = 0
+    if response.status_code == 200:
+        while city_data == 0:
+            if len(response.json()) > 0:
+                city_data = response.json()[0]
+            else:
+                print(f"Feil: Kan ikke finne en by med navnet {search}. Vennligst prøv på nytt.")
+                response, search = search_input()
     return city_data, search
 
 def get_lat_lon_from_city_data(data: any) -> tuple[float, float]:
@@ -88,8 +93,8 @@ def get_temperatures_for_tomorrow(weather_data_per_hour: list) -> list:
     return temperatures
 
 def output_temperatures():
-    tomorrow = get_date_tomorrow()
     city_data, search = search_by_city()
+    tomorrow = get_date_tomorrow()
     lat, lon = get_lat_lon_from_city_data(city_data)
     weather_data = get_weather_data(lat, lon)
     hourstrings_iso, hourstrings = make_hours_tomorrow(str(tomorrow))
