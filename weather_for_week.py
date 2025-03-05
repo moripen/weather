@@ -1,16 +1,17 @@
 import requests
 import datetime
 
-
-def get_dates_for_week() -> list: 
+def get_dates_weekday_for_week() -> tuple[list,list]: 
     dates_for_week = []
+    weekdays_list = []
     for days in range(1,8):
         weekdays = datetime.datetime.today() + datetime.timedelta(days=days)
-        dates_for_week.append(weekdays.date())
-    return dates_for_week
+        dates_for_week.append(str(weekdays.date()))
+        weekdays_list.append(weekdays.weekday())
+    return dates_for_week, weekdays_list
 
 def search_input():
-    user_agent = {'User-agent': 'Mozilla/5.0'}
+    user_agent = {'User-agent': 'moripen/weather'}
     search = str(input("Tast inn bynavn: "))
     nominatim_url = f"https://nominatim.openstreetmap.org/search?q={search}&format=json"
     response = requests.get(nominatim_url, headers=user_agent)
@@ -47,30 +48,96 @@ def get_weather_data(lat: float, lon: float) -> any:
     response = requests.get(url)
     print(response.status_code)
     if response.status_code == 200:
-        data = response.json()
+        weather_data = response.json()
     
-    return data
+    return weather_data
 
-def make_hourstring(date: str) -> list:
+def make_hourstring_for_week(dates_for_week: str) -> list:
     hourstrings_iso = []
-    for hours in range(0,25):
-        if hours > 9:
-            hourstring_iso = f'{date}T{hours}:00:00Z'
-        else: 
-            hourstring_iso = f'{date}T0{hours}:00:00Z'
-        hourstrings_iso.append(hourstring_iso)
+    for date in dates_for_week:
+        for hours in range(0,24):
+            if hours > 9:
+                hourstring_iso = f'{date}T{hours}:00:00Z'
+            else: 
+                hourstring_iso = f'{date}T0{hours}:00:00Z'
+            hourstrings_iso.append(hourstring_iso)
 
     return hourstrings_iso
+
+def get_weather_data_for_next_week_per_hour(weather_data: any, hourstrings_iso_week: list) -> list:
+    properties = weather_data["properties"]
+    timeseries = properties["timeseries"]
+    weather_data_per_hour = []
+    for hours in range(0,80):
+        hour = timeseries[hours]
+        if hour["time"] in hourstrings_iso_week:
+            weather_data_per_hour.append(timeseries[hours])
+    return weather_data_per_hour
+
+def get_temperatures_for_next_week(weather_data_per_hour:list) -> list:
+    temperatures = []
+    for hours in weather_data_per_hour:
+        data = hours["data"]
+        instant = data["instant"]
+        details = instant["details"]
+        temperature = details["air_temperature"]
+        temperatures.append([hours["time"], temperature])
+        
+    return temperatures
+
+def separate_first_two_days(temperatures: list, dates_for_week: list):
+    day1 = []
+    day2 = []
+    for listentry in temperatures:
+        if listentry[0].startswith(dates_for_week[0]):
+            day1.append(listentry)
+        elif listentry[0].startswith(dates_for_week[1]):
+            day2.append(listentry)
+    return day1, day2
+
+def calculate_averages_first_day(day1: list):
+    sumtemp = 0.0
+    sum_periods = [0.0, 0.0, 0.0, 0.0]
+    n_in_period = [0, 0, 0, 0]
+    for day in day1:
+        sumtemp += day[1]
+        for i in range(0, 10):
+            if f"T0{i}" in day[0]:
+                sum_periods[0] += day[1]
+                n_in_period[0] += 1
+        for i in range(10, 15):
+            if f"T{i}" in day[0]:
+                sum_periods[1] += day[1]
+                n_in_period[1] += 1
+        for i in range(15, 18):
+            if f"T{i}" in day[0]:
+                sum_periods[2] += day[1]
+                n_in_period[2] += 1
+        for i in range(18, 24):
+            if f"T{i}" in day[0]:
+                sum_periods[3] += day[1]
+                n_in_period[3] += 1
+    averagetemp = round(sumtemp/len(day1), 1)
+    print(sum_periods, n_in_period)
+    average_periods = [0,0,0,0]
+    for i in range(0,4):
+        average_periods[i] += sum_periods[i]/n_in_period[i]
+
+    print
+    
+    return averagetemp, average_periods
 
 
 def output_temperatures_for_week():
     city_data, search = search_by_city()
-    dates_for_week = get_dates_for_week()
     lat, lon = get_lat_lon_from_city_data(city_data)
     weather_data = get_weather_data(lat, lon)
-
-    print(dates_for_week, search, weather_data)
-
+    dates_for_week, weekdays_list = get_dates_weekday_for_week()
+    hourstrings_iso_week = make_hourstring_for_week(dates_for_week)
+    weather_data_per_hour = get_weather_data_for_next_week_per_hour(weather_data, hourstrings_iso_week)
+    temperatures_for_week = get_temperatures_for_next_week(weather_data_per_hour)
+    day1, day2 = separate_first_two_days(temperatures_for_week, dates_for_week)
+    averagetemp, average_periods = calculate_averages_first_day(day1)
 
 if __name__ == '__main__':
     output_temperatures_for_week()
