@@ -12,7 +12,7 @@ def search_by_city():
     user_agent = {'User-agent': 'Mozilla/5.0'}
     nominatim_url = f"https://nominatim.openstreetmap.org/search?q={search}&format=json"
     response = requests.get(nominatim_url, headers=user_agent)
-
+    print(response.json()[0])
     if response.status_code == 200:
 
         if len(response.json()) > 0:
@@ -30,7 +30,10 @@ def get_lat_lon_from_city_data(data: any) -> tuple[float, float]:
     shorten_lat = round(latitude, 2)
     shorten_lon = round(longitude, 2)
 
-    return shorten_lat, shorten_lon
+    float_lat = float(shorten_lat)
+    float_lon = float(shorten_lon)
+
+    return float_lat, float_lon
 
 def get_weather_data(lat: float, lon: float) -> any:
     url = f"https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={lat}&lon={lon}"
@@ -62,7 +65,7 @@ def make_hours_tomorrow(tomorrow: str) -> tuple[list, list]:
 
     return hourstrings_iso, hourstrings
 
-def get_weather_data_for_tomorrow_per_hour(weather_data: any, hourstrings_iso: list, hourstrings: list) -> list:
+def get_weather_data_for_tomorrow_per_hour(weather_data: any, hourstrings_iso: list) -> list:
     properties = weather_data["properties"]
     timeseries = properties["timeseries"]
 
@@ -90,7 +93,7 @@ def output_temperatures():
     lat, lon = get_lat_lon_from_city_data(city_data)
     weather_data = get_weather_data(lat, lon)
     hourstrings_iso, hourstrings = make_hours_tomorrow(str(tomorrow))
-    weather_data_per_hour = get_weather_data_for_tomorrow_per_hour(weather_data, hourstrings_iso, hourstrings)
+    weather_data_per_hour = get_weather_data_for_tomorrow_per_hour(weather_data, hourstrings_iso)
     temperatures = get_temperatures_for_tomorrow(weather_data_per_hour)
 
     print(f'Temperaturer for {search} {tomorrow.day}.{tomorrow.month}.{tomorrow.year}:')
@@ -101,6 +104,3 @@ def output_temperatures():
 
 if __name__ == '__main__':
     output_temperatures()
-    #search_by_city()
-    #lat, lon = get_lat_lon_from_city_data()
-    #print(lat, lon)
