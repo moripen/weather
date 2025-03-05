@@ -16,7 +16,7 @@ def search_input():
 
     return response, search
 
-def search_by_city():
+def search_by_city() -> tuple[any, str]:
     response, search = search_input()
     city_data = 0
     if response.status_code == 200:
