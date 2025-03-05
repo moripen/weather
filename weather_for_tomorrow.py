@@ -56,7 +56,7 @@ def make_hours_tomorrow(tomorrow: str) -> tuple[list, list]:
     '''
     hourstrings_iso = []
     hourstrings = []
-    for hours in range(0,25):
+    for hours in range(0,24):
         if hours > 9:
             hourstring_iso = f'{tomorrow}T{hours}:00:00Z'
             hourstring = f'Kl {hours}:00'
