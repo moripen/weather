@@ -43,7 +43,6 @@ def get_weather_data(lat: float, lon: float) -> any:
     url = f"https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={lat}&lon={lon}"
     #url = "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=59.91&lon=10.75"
     response = requests.get(url)
-    print(response.status_code)
     if response.status_code == 200:
         data = response.json()
     
